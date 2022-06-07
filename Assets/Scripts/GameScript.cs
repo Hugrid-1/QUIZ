@@ -17,14 +17,17 @@ public class GameScript : MonoBehaviour
     public Question[] questions; //Определение списка вопросов
     public TextMeshProUGUI[] answersText;
     public TextMeshProUGUI qText;
+    public bool levelOnTime;
 
     //Определение элементов и переменных интерфейса итогового окна
     public GameObject endGamePanel;
+    public GameObject timer;
 
     public TextMeshProUGUI rightAnswersText;
     public TextMeshProUGUI wrongAnswersText;
     public int rightAnswersCounter;
     public int wrongAnswersCounter;
+  
     //Определение переменных вопросов
     public AnswerInterface answerInterface;
     List<object> qList; //Очередь вопросов
@@ -35,7 +38,9 @@ public class GameScript : MonoBehaviour
     {
         //Загрузка вопросов на уровень
         Debug.Log("Загрузка вопросов");
-        questions = GameObject.FindGameObjectWithTag("MenuManager").GetComponent<MenuManager>().filteredQuestions;
+        questions = GameObject.FindGameObjectWithTag("MenuManager").GetComponent<MenuManager>().level.levelQuestionsData;
+        levelOnTime = GameObject.FindGameObjectWithTag("MenuManager").GetComponent<MenuManager>().level.onTime;
+        
         //Выход из меню
         Debug.Log("Выгрузка сцены Menu");
         SceneManager.UnloadSceneAsync("Menu");
@@ -44,6 +49,10 @@ public class GameScript : MonoBehaviour
 
         qList = new List<object>(questions); //Определение списка вопросов
         questionGenerate(); //Генерация вопроса
+        if (levelOnTime)
+        {
+            timer.SetActive(true);
+        }
     }
 
     void questionGenerate()
@@ -63,11 +72,19 @@ public class GameScript : MonoBehaviour
         }
         else //завершение игры
         {
-            print("Вы прошли игру");
-            rightAnswersText.SetText(rightAnswersCounter.ToString()); //Передача интерфейсу количества правильных ответов
-            wrongAnswersText.SetText(wrongAnswersCounter.ToString()); //Передача интерфейсу количества неправильных ответов
-            endGamePanel.SetActive(true); //Включение панели итогов игры
+            endLevel();
         }
+
+        
+    }
+    public void endLevel()
+    {
+        print("Вы прошли игру");
+        rightAnswersText.SetText(rightAnswersCounter.ToString()); //Передача интерфейсу количества правильных ответов
+        wrongAnswersText.SetText(wrongAnswersCounter.ToString()); //Передача интерфейсу количества неправильных ответов
+        endGamePanel.SetActive(true); //Включение панели итогов игры
+        timer.SetActive(false); //Выключение таймера
+        timer.GetComponent<Timer>().resetTimer();
     }
     public void AnswerBttns(int index) //Функция обработки нажатия кнопки ответа на вопрос
     {
@@ -76,6 +93,7 @@ public class GameScript : MonoBehaviour
             print("Правильный ответ");
             rightAnswersCounter++; //Увеличение счетчика правильных ответов на вопрос
             qList.RemoveAt(randQuestionId); //Удаление вопроса из очереди
+            timer.GetComponent<Timer>().addTime();
             questionGenerate();
         }
 
